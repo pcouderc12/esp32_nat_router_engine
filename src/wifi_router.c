@@ -31,7 +31,6 @@
 #endif
 #include "lwip/lwip_napt.h"
 
-#include "router_globals.h"
 
 
 
