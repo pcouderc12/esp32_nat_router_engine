@@ -45,7 +45,7 @@ const int WIFI_CONNECTED_BIT = BIT0;
 bool ap_connect = false;
 
 uint32_t my_ip;
-uint32_t my_ap_ip;
+static uint32_t my_ap_ip,my_dns;
 
 
 esp_netif_t *wifiAP;
@@ -64,18 +64,16 @@ static const char *TAG = "ESP32 NAT router";
 
 void fillDNS(esp_ip_addr_t *dnsserver, esp_ip_addr_t *fallback)
 {
-    char *customDNS = NULL;
-    get_config_param_str("custom_dns", &customDNS);
 
-    if (customDNS == NULL)
+    if (my_dns == -1)
     {
         ESP_LOGI(TAG, "Setting DNS server to upstream DNS");
         dnsserver->u_addr.ip4.addr = fallback->u_addr.ip4.addr;
     }
     else
     {
-        ESP_LOGI(TAG, "Setting custom DNS server to: %s", customDNS);
-        dnsserver->u_addr.ip4.addr = esp_ip4addr_aton(customDNS);
+        ESP_LOGI(TAG, "Setting custom DNS server to  customDNS");
+        dnsserver->u_addr.ip4.addr = my_dns;
     }
 }
 void setDnsServer(esp_netif_t *network, esp_ip_addr_t *dnsIP)
@@ -114,7 +112,6 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
-        stop_dns_server();
         ap_connect = true;
         my_ip = event->ip_info.ip.addr;
         delete_portmap_tab();
@@ -207,7 +204,7 @@ esp_err_t get_config_param_blob(char *name, char **param, size_t *blob_len)
 
 #endif
 }
-void wifi_init(const char *ssid, const char *passwd, const uint32_t static_ip, const uint32_t subnet_mask, const uint32_t gateway_addr, const char *ap_ssid, const char *ap_passwd, const uint32_t ap_ip, const uint32_t ap_netmask, const char *sta_user, const char *sta_identity)
+void wifi_init(const char *ssid, const char *passwd, const uint32_t static_ip, const uint32_t subnet_mask, const uint32_t gateway_addr, const char *ap_ssid, const char *ap_passwd, const uint32_t ap_ip, const uint32_t ap_netmask, const uint32_t custom_dns, const char *sta_user, const char *sta_identity)
 {
 
     wifi_event_group = xEventGroupCreate();
@@ -226,6 +223,7 @@ void wifi_init(const char *ssid, const char *passwd, const uint32_t static_ip, c
     }
 
     my_ap_ip = (ap_ip);
+	my_dns=custom_dns;
 
     esp_netif_ip_info_t ipInfo_ap;
     ipInfo_ap.ip.addr = my_ap_ip;
@@ -300,11 +298,6 @@ void wifi_init(const char *ssid, const char *passwd, const uint32_t static_ip, c
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
         ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &ap_config));
     }
-    esp_ip_addr_t dnsserver;
-    dnsserver.u_addr.ip4.addr = (ap_ip);
-/////    dnsserver.u_addr.ip4.addr = esp_ip4addr_aton(ap_ip);
-    setDnsServer(wifiAP, &dnsserver);
-
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         pdFALSE, pdTRUE, JOIN_TIMEOUT_MS / portTICK_PERIOD_MS);
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -318,7 +311,6 @@ void wifi_init(const char *ssid, const char *passwd, const uint32_t static_ip, c
     {
         ESP_LOGI(TAG, "wifi_init_ap with default finished.");
     }
-    start_dns_server();
     ip_napt_enable(my_ap_ip, 1);
     // ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(80));
     // int8_t j;

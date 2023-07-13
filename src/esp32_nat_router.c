@@ -295,7 +295,7 @@ void fillMac()
 }
 
 
-void wifi_init(const char *ssid, const char *passwd, const uint32_t static_ip, const uint32_t subnet_mask, const uint32_t gateway_addr, const char *ap_ssid, const char *ap_passwd, const uint32_t ap_ip, const uint32_t ap_netmask, const char *sta_user, const char *sta_identity);
+void wifi_init(const char *ssid, const char *passwd, const uint32_t static_ip, const uint32_t subnet_mask, const uint32_t gateway_addr, const char *ap_ssid, const char *ap_passwd, const uint32_t ap_ip, const uint32_t ap_netmask, const uint32_t custom_dns, const char *sta_user, const char *sta_identity);
 
 
 void app_main(void)
@@ -310,7 +310,7 @@ void app_main(void)
 #endif
     // Setup WIFI
     wifi_init(STA_SSID, STA_PASSWORD, ipaddr_addr(STA_STATIC_IP), ipaddr_addr(STA_SUBNET_MASK), ipaddr_addr(STA_GATEWAY), 
-			AP_SSID, AP_PASSWORD, ipaddr_addr(AP_IP), ipaddr_addr(AP_SUBNET_MASK), STA_USER, STA_IDENTITY);
+			AP_SSID, AP_PASSWORD, ipaddr_addr(AP_IP), ipaddr_addr(AP_SUBNET_MASK), ipaddr_addr(CUSTOM_DNS), STA_USER, STA_IDENTITY);
 
     ESP_LOGI(TAG, "NAT is enabled");
 

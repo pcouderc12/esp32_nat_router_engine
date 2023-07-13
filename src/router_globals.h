@@ -21,7 +21,6 @@ extern "C"
    extern bool ap_connect;
 
    extern uint32_t my_ip;
-   extern uint32_t my_ap_ip;
 
    int set_sta(int argc, char **argv);
    int set_sta_static(int argc, char **argv);
